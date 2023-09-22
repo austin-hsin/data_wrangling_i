@@ -1,0 +1,102 @@
+---
+title: "Data Manipulation"
+author: "Austin Hsin"
+date: "2023-09-19"
+output: html_document
+---
+
+```{r echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Litters + Pups Import
+
+Select function for Litters and Pups datasets
+
+```{r Litters + Pups}
+options(tibble.print_min = 3)
+
+litters_data = read_csv("./data_import_examples/FAS_litters.csv",
+  col_types = "ccddiiii")
+litters_data = janitor::clean_names(litters_data)
+
+pups_data = read_csv("./data_import_examples/FAS_pups.csv",
+  col_types = "ciiiii")
+pups_data = janitor::clean_names(pups_data)
+
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
+select(litters_data, group:gd_of_birth)
+select(litters_data, -pups_survive)
+select(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number)
+select(litters_data, starts_with("gd"))
+select(litters_data, litter_number, pups_survive, everything())
+relocate(litters_data, litter_number, pups_survive)
+
+select(pups_data, litter_number, sex, pd_ears)
+```
+
+## Filter
+
+Filter function with litters and pups datasets
+
+```{r}
+filter(pups_data, sex == 1)
+filter(pups_data, sex == 2, pd_walk < 11)
+```
+
+## Mutate
+
+Mutate function with litters and pups datasets
+
+```{r}
+mutate(litters_data,
+  wt_gain = gd18_weight - gd0_weight,
+  group = str_to_lower(group)
+)
+mutate(pups_data, pivot_minus7 = pd_pivot - 7)
+mutate(pups_data, pd_sum = pd_ears + pd_eyes + pd_pivot + pd_walk)
+```
+
+## Arrange and |>
+
+Arrange and |> function with litters and pups datasets where the second chunk
+is an example of how we learned these functions and the third chunk is the piping example
+
+Fourth chunk is the learning assessment 
+
+```{r}
+head(arrange(litters_data, group, pups_born_alive), 10)
+
+litters_data_raw = read_csv("./data_import_examples/FAS_litters.csv",
+  col_types = "ccddiiii")
+litters_data_clean_names = janitor::clean_names(litters_data_raw)
+litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
+litters_data_with_vars = 
+  mutate(
+    litters_data_selected_cols, 
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group))
+litters_data_with_vars_without_missing = 
+  drop_na(litters_data_with_vars, wt_gain)
+litters_data_with_vars_without_missing
+
+litters_data = 
+  read_csv("./data_import_examples/FAS_litters.csv", col_types = "ccddiiii") |> 
+  janitor::clean_names() |> 
+  select(-pups_survive) |> 
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)) |> 
+  drop_na(wt_gain)
+
+litters_data
+
+read_csv("./data_import_examples/FAS_pups.csv", col_types = "ciiiii") |>
+  janitor::clean_names() |> 
+  filter(sex == 1) |> 
+  select(-pd_ears) |> 
+  mutate(pd_pivot_gt7 = pd_pivot > 7)
+```
+

@@ -1,0 +1,97 @@
+---
+title: "Data Tidying"
+author: "Austin Hsin"
+date: "2023-09-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+```
+
+## pivot_longer
+
+pivot_longer function using pulse dataset in a step by step way to show functionality
+
+```{r}
+pulse_df = 
+  haven::read_sas("./data_import_Examples/public_pulse_data.sas7bdat") |>
+  janitor::clean_names()
+
+pulse_df
+
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_df, 
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    values_to = "bdi")
+
+pulse_tidy_data
+
+pulse_tidy_data = 
+  pivot_longer(
+    pulse_df, 
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi")
+
+pulse_tidy_data
+```
+
+## pivot_longer summary
+
+Tidying pulse dataset in one chunk/step
+
+```{r}
+pulse_df = 
+  haven::read_sas("./data_import_examples/public_pulse_data.sas7bdat") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") |>
+  relocate(visit) |>
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit)) |>
+  arrange(id, visit)
+
+print(pulse_df, n = 12)
+```
+
+## pivot_longer learning assessment
+
+Tidying litters data for learning assessment
+
+```{r}
+litters_data = read_csv("./data_import_examples/FAS_litters.csv", col_types = "ccddiiii") |>
+  janitor::clean_names()|>
+  select(litter_number, gd0_weight, gd18_weight)|>
+pivot_longer(
+  gd0_weight:gd18_weight,
+  names_to = "gd",
+  values_to = "weight") |>
+mutate(gd = recode(gd, "gd0_weight" = 0, "gd18_weight" = 18))
+litters_data
+```
+
+Notes: need to read file and set col_types, clean names, then select your variables (can learn shortcuts for variable selection later)
+pivot_longer chooses which variables to change, changing the names/prefixes to one variable and separating the values to a different variable
+mutate adjusts the variable you want based on your function(replace, factor, recode, etc) where you must do var = function(var, insert changes)
+
+## pivot_wider
+
+```{r}
+analysis_result = tibble(
+  group = c("treatment", "treatment", "placebo", "placebo"),
+  time = c("pre", "post", "pre", "post"),
+  mean = c(4, 8, 3.5, 4)
+)
+
+analysis_result
+```
